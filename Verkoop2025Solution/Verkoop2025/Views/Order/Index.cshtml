@@ -1,0 +1,120 @@
+﻿@model Verkoop2025Web.Models.OrderViewModel
+@using X.PagedList.Extensions
+@using X.PagedList
+
+@{
+    ViewData["Title"] = "Bestellijst";
+    var isSearching = !string.IsNullOrEmpty(Context.Request.Query["searchterm"]);
+}
+
+<div class="page">
+    <h2 class="title">@ViewData["Title"]</h2>
+
+    <div>
+        <form method="get" asp-action="SearchOrder" class="p-0">
+            <div class="input-group @(isSearching ? "with-reset" : "")">
+                <span class="input-group-text">
+                    <i class="fas fa-search"></i>
+                </span>
+                <input type="text" name="searchterm" class="form-control"
+                    placeholder="Typ hier een voornaam of familienaam van de klant..."
+                    value="@Context.Request.Query["searchterm"]" required />
+                <button type="submit" class="btn btn-primary text-black" id="searchBtn">Zoek</button>
+                @if (Context.Request.Query.ContainsKey("searchterm") &&
+                !string.IsNullOrEmpty(Context.Request.Query["searchterm"]))
+                {
+                    <button type="button" class="btn btn-secondary text-black" id="resetBtn" onclick="clearSearchTerm();"
+                        data-index-url="@Url.Action("Index", "Order")">
+                        Terugkeren
+                    </button>
+                }
+            </div>
+        </form>
+    </div>
+
+    <div class="table-container">
+        @if (Model.Bestellingen != null)
+        {
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th scope="col">Bestelnummer</th>
+                            <th scope="col">Besteldatum</th>
+                            <th scope="col">Klantnaam</th>
+                            <th scope="col">Bestelstatus</th>
+                            <th scope="col">Aantal artikels van de bestelling</th>
+                            <th scope="col"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var order in Model.Bestellingen)
+                        {
+                            <tr>
+                                <th scope="row">@order.BestelId</th>
+                                <td>@order.Besteldatum.ToString("dd/MM/yyyy")</td>
+                                <td>@($"{order.Voornaam} {order.Familienaam}".Trim())</td>
+                                <td>@order.BestellingsStatus.Naam</td>
+                                <td>@order.Bestellijnen?.Sum(bl => bl.AantalBesteld)</td>
+                                <td class="d-flex justify-content-end align-content-center">
+                                    <a asp-action="Details" asp-route-id="@order.BestelId" class="btn btn-primary"
+                                        onclick="saveOrderPageUrl();">
+                                        Detail
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+                <!-- Aangepaste paginering met Bootstrap -->
+                <nav aria-label="Page navigation">
+                    <ul class="pagination justify-content-end">
+
+                        <!-- Toon "Vorige" alleen als we niet op de eerste pagina staan -->
+                        <li class="page-item @(!Model.Bestellingen.HasPreviousPage ? "disabled" : "")">
+                            <a class="page-link btn btn-primary"
+                                href="@Url.Action("Index", new { page = Model.Bestellingen.PageNumber - 1 })" tabindex="-1"
+                            @(!Model.Bestellingen.HasPreviousPage ? "aria-disabled='true'" : "")>
+                                Vorige
+                            </a>
+                        </li>
+
+                        <!-- Paginanummers weergeven -->
+                        @for (int i = 1; i <= Model.Bestellingen.PageCount; i++)
+                        {
+                            <li class="page-item @(i == Model.Bestellingen.PageNumber ? "active" : "")">
+                                <a class="text-dark page-link" href="@Url.Action("Index", new { page = i })">@i</a>
+                            </li>
+                        }
+
+                        <!-- oon "Volgende" alleen als we niet op de laatste pagina zijn -->
+                        <li class="page-item @(!Model.Bestellingen.HasNextPage ? "disabled" : "")">
+                            <a class="page-link btn btn-primary"
+                                href="@Url.Action("Index", new { page = Model.Bestellingen.PageNumber + 1 })"
+                            @(!Model.Bestellingen.HasNextPage ? "aria-disabled='true'" : "")>
+                                Volgende
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-warning" role="alert">
+                <h4 class="alert-heading">Geen bestellingen gevonden</h4>
+                <p>
+                    De opgegeven bestelling kon niet worden geladen. Controleer of de bestelling bestaat en probeer opnieuw.
+                </p>
+            </div>
+        }
+    </div>
+</div>
+
+<script>
+    function saveOrderPageUrl() {
+        sessionStorage.removeItem('previousOrderUrl', window.location.href);
+        sessionStorage.setItem('previousOrderPageUrl', window.location.href);
+
+    }
+</script>

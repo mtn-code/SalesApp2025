@@ -1,0 +1,54 @@
+﻿@using Verkoop2025Web.Models
+@model LoginViewModel
+@{
+	Layout = "~/Views/Shared/LoginVerkoopLayout.cshtml";
+}
+@{
+	ViewData["Title"] = "Login";
+}
+<h2 class="text-black mt-3">Inloggen</h2>
+<form asp-action="Authenticate" method="get">
+	<div class="col-auto">
+		<label></label>
+		<input type="email" asp-for="@Model.Email" placeholder="name@example.com" class=" form-control">
+		<span asp-validation-for="Email" class="text-danger"></span>
+	</div>
+	<div class="col-auto">
+		<label></label>
+		<div class="input-group mt-3">
+			<input id="passwordInput" type="password" asp-for="@Model.Password" placeholder="Password"
+				class="form-control" />
+			<button type="button" class="btn btn-light" id="togglePassword" onclick="togglePasswordVisibility()">
+				<i id="eyeIcon" class="fa fa-eye"></i>
+			</button>
+
+			<script>
+				// Functie om de zichtbaarheid van het wachtwoord in of uit te schakelen
+				function togglePasswordVisibility() {
+					var passwordInput = document.getElementById("passwordInput");
+					var eyeIcon = document.getElementById("eyeIcon");
+
+					// Schakelen tussen 'wachtwoord' en 'tekst' typen
+					if (passwordInput.type === "password") {
+						passwordInput.type = "text";
+						eyeIcon.classList.remove("fa-eye");
+						eyeIcon.classList.add("fa-eye-slash");
+					} else {
+						passwordInput.type = "password";
+						eyeIcon.classList.remove("fa-eye-slash");
+						eyeIcon.classList.add("fa-eye");
+					}
+				}
+			</script>
+		</div>
+	</div>
+	<span asp-validation-for="Password" class="text-danger"></span>
+	@if (!string.IsNullOrWhiteSpace(ViewBag.ErrorMessage))
+	{
+		<p class="alert alert-danger">@ViewBag.Errormessage</p>
+	}
+
+	<input type="submit" value="Inloggen" class="buttonLoginVerkoop mt-3 btn btn-primary text-black" />
+</form>
+
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">

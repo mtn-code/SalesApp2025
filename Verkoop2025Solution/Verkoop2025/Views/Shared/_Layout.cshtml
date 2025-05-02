@@ -1,0 +1,160 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Verkoop2025</title>
+    <script type="importmap"></script>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/Verkoop2025Web.styles.css" asp-append-version="true" />
+</head>
+
+<body class="d-flex flex-column">
+    <header>
+        <nav class="navbar navbar-expand-md bg-prularia border-bottom box-shadow">
+            <div class="container-fluid">
+                <img src="~/images/logo_zwart.png" class="bannerlogo mx-5" />
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarText"
+                    aria-controls="navbarText" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarText">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                        <li class="nav-item">
+                            <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Home" ? "active" : "")"
+                                asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Customer" ? "active" : "")"
+                                asp-area="" asp-controller="Customer" asp-action="Index">Klanten</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Order" ? "active" : "")"
+                                asp-area="" asp-controller="Order" asp-action="Index">Bestellingen</a>
+                        </li>
+                    </ul>
+                    @if (ViewBag.CurrentUser != null)
+                    {
+                        <ul class="navbar-nav ms-auto">
+                            <li class="nav-item dropdown">
+
+                                <button class="btn dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Welkom, @ViewBag.CurrentUser
+                                </button>
+                                <ul class="dropdown-menu ">
+                                    <li>
+                                        <a class="dropdown-item" data-bs-toggle="modal" data-bs-target="#passwordModal">
+                                            Wachtwoord wijzigen
+                                        </a>
+                                    </li>
+                                    <li><a class="dropdown-item" asp-controller="Client" asp-action="LogOut">Uitloggen</a>
+                                    </li>
+                                </ul>
+                            </li>
+                        </ul>
+                    }
+                </div>
+            </div>
+        </nav>
+    </header>
+    <div class="container">
+        <main role="main" class="pb-3">
+            <div class="modal" id="passwordModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h1 class="modal-title fs-5" id="exampleModalLabel">Wachtwoord wijzigen</h1>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form method="post" asp-action="ChangePassword" asp-controller="Client" id="passwordForm">
+                                <div class="mb-3">
+                                    <label for="oldPassword" class="col-form-label">Oud wachtwoord</label>
+                                    <input type="text" class="form-control" id="oldPassword" name="oldPassword"
+                                        required>
+                                    <strong class="text-bg-danger">@ViewBag.OldPasswordError</strong>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="newPassword" class="col-form-label">Nieuw wachtwoord</label>
+                                    <input type="text" class="form-control" id="newPassword" name="newPassword"
+                                        required>
+                                    <strong class="text-bg-danger">@ViewBag.NewPasswordError</strong>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="confirmNewPassword" class="col-form-label">Bevestig nieuw
+                                        wachtwoord</label>
+                                    <input type="text" class="form-control" id="confirmNewPassword"
+                                        name="confirmNewPassword" required>
+                                    <strong class="text-bg-danger">@ViewBag.ConfirmPasswordError</strong>
+                                </div>
+                                @if (TempData["SuccessMessage"] != null)
+                                {
+                                    <div class="alert alert-success">
+                                        @TempData["SuccessMessage"]
+                                    </div>
+                                }
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary"
+                                        data-bs-dismiss="modal">Sluiten</button>
+                                    <button type="submit" class="btn btn-primary">Opslaan</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @RenderBody()
+        </main>
+    </div>
+
+    <footer class="border-top footer text-muted text-center">
+        <div class="container">
+            &copy; 2025 - Verkoop2025
+        </div>
+    </footer>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/jquery-validation/dist/jquery.validate.js"></script>
+    <script>
+        var cultureInfo = '@System.Globalization.CultureInfo.CurrentCulture.Name';
+        if (cultureInfo != 'en-GB' && cultureInfo != 'en-US') {
+            $.validator.methods.number = function (value, element) {
+                return this.optional(element) ||
+                    /^-?(?:\d+|\d{1,3}(?:\.\d{3})+)?(?:,\d+)?$/.test(value);
+            }
+        }
+    </script>
+    <script src="~/lib/jquery-validation-unobtrusive/dist/jquery.validate.unobtrusive.min.js">
+    </script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script>
+        $(document).ready(function () {
+            if ('@ViewBag.OldPasswordError' ||
+                '@ViewBag.ConfirmPasswordError' ||
+                '@ViewBag.NewPasswordError' ||
+                '@TempData["SuccessMessage"]') {
+                $('#passwordModal').modal('show');
+            }
+
+            $('#passwordForm').submit(function (event) {
+                if ('@ViewBag.OldPasswordError' ||
+                    '@ViewBag.ConfirmPasswordError' ||
+                    '@ViewBag.NewPasswordError') {
+                } else if ('@TempData["SuccessMessage"]') {
+                    $('#passwordModal').modal('show');
+                    $('#passwordForm')[0].reset();
+                } else {
+                    //No Errors or success, close the modal.
+                    $('#passwordModal').modal('hide');
+                    $('#passwordForm')[0].reset();
+                }
+            });
+        });
+    </script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+
+</html>

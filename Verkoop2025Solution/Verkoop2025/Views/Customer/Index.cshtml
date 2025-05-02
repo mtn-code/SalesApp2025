@@ -1,0 +1,160 @@
+﻿@using Verkoop2025Data.Models
+
+@{
+    ViewData["Title"] = "Klantenlijst";
+    var isSearching = !string.IsNullOrEmpty(Context.Request.Query["searchterm"]);
+    bool? isActive = ViewBag.IsActive as bool?;
+    string filterText = isActive == null ? "Alle klanten" : (isActive.Value ? "Alleen actieve klanten" : "Alleen gedeactiveerde klanten");
+
+    bool? isNatuurlijke = ViewBag.IsNatuurlijke as bool?;
+    string natuurlijkeText = isNatuurlijke == null ? "Alle klanten" : (isNatuurlijke.Value ? "Natuurlijke personen" : "Rechtspersonen");
+}
+
+<div class="page">
+
+    <h2 class="title text-black">@ViewData["Title"]</h2>
+
+    <div>
+        <form method="get" asp-action="SearchCustomer" class="p-0">
+            <div class="input-group @(isSearching ? "with-reset" : "")">
+                <span class="input-group-text">
+                    <i class="fas fa-search"></i>
+                </span>
+                <input type="text" name="searchterm" class="form-control"
+                       placeholder="Typ hier een voornaam of familienaam van de klant..."
+                       value="@Context.Request.Query["searchterm"]" required />
+                <button type="submit" class="btn btn-primary text-black" id="searchBtn">Zoek</button>
+                @if (Context.Request.Query.ContainsKey("searchterm") &&
+                !string.IsNullOrEmpty(Context.Request.Query["searchterm"]))
+                {
+                    <button type="button" class="btn btn-secondary text-black" id="resetBtn" onclick="clearSearchTerm();"
+                            data-index-url="@Url.Action("Index", "Customer")">
+                        Terugkeren
+                    </button>
+                }
+            </div>
+        </form>
+    </div>
+
+    <div class="d-flex align-items-center gap-2 ">
+        <!-- Filter voor actieve/inactieve klanten -->
+        <div class="d-flex align-items-center">
+            <div class="dropdown">
+                <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    Actief: @filterText
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="@Url.Action("GetCustomers", "Customer", new { isActive = (bool?)null })">Alle klanten</a></li>
+                    <li><a class="dropdown-item" href="@Url.Action("GetCustomers", "Customer", new { isActive = true })">Alleen actieve klanten</a></li>
+                    <li><a class="dropdown-item" href="@Url.Action("GetCustomers", "Customer", new { isActive = false })">Alleen gedeactiveerde klanten</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Filter voor persoonstype -->
+        <div class="d-flex align-items-center">
+            <div class="dropdown">
+                <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    Persoonstype: @natuurlijkeText
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="@Url.Action("GetPersoonstype", "Customer", new { isNatuurlijke = (bool?)null })">Alle klanten</a></li>
+                    <li><a class="dropdown-item" href="@Url.Action("GetPersoonstype", "Customer", new { isNatuurlijke = true })">Natuurlijke personen</a></li>
+                    <li><a class="dropdown-item" href="@Url.Action("GetPersoonstype", "Customer", new { isNatuurlijke = false })">Rechtspersonen</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="table-container">
+        @if (Model != null)
+        {
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th scope="col">Naam</th>
+                        <th scope="col">Rechtspersoon</th>
+                        <th scope="col">Aantal bestellingen</th>
+                        <th scope="col">Actief</th>
+                        <th scope="col"></th>
+
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var klant in Model.Klanten)
+                    {
+                        <tr>
+                            <th scope="row">
+                                @(klant.Rechtspersoon != null ? klant.Rechtspersoon.Naam :
+                                    klant.NatuurlijkePersoon != null ? $"{klant.NatuurlijkePersoon.Voornaam} {klant.NatuurlijkePersoon.Familienaam}" : "Onbekend")
+                            </th>
+                            <td><input type="checkbox" disabled @(klant.Rechtspersoon != null ? "checked" : "") /></td>
+                            <td>@klant.Bestellingen.Count</td>
+                            <td>
+                                @if (klant.NatuurlijkePersoon != null)
+                                {
+                                    <input type="checkbox" disabled @(klant.NatuurlijkePersoon != null && klant.NatuurlijkePersoon.GebruikersAccountId != null && !klant.NatuurlijkePersoon.GebruikersAccount.Disabled ? "checked" : "") />
+                                }
+                                else
+                                {
+                                    <p></p>
+                                }
+                            </td>
+                            <td class="d-flex justify-content-end align-content-center">
+                                <a asp-action="Details" asp-route-id="@klant.KlantId" class="btn btn-primary" onclick="saveCustomerUrl();">
+                                    Detail
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+            <!-- Aangepaste paginering met Bootstrap -->
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-end">
+                    @{
+                        var actionName = ViewBag.IsNatuurlijke != null ? "GetPersoonstype" : (ViewBag.IsActive != null ? "GetCustomers" : "Index");
+                    }
+
+                    <!-- Toon "Vorige" alleen als we niet op de eerste pagina staan -->
+                    <li class="page-item @(!Model.Klanten.HasPreviousPage ? "disabled" : "")">
+                        <a class="page-link btn btn-primary" href="@Url.Action(actionName, new { isActive = ViewBag.IsActive, isNatuurlijke = ViewBag.IsNatuurlijke, page = Model.Klanten.PageNumber - 1 })" tabindex="-1"
+                            @(!Model.Klanten.HasPreviousPage ? "aria-disabled='true'" : "")>
+                            Vorige
+                        </a>
+                    </li>
+
+                    <!-- Paginanummers weergeven -->
+                    @for (int i = 1; i <= Model.Klanten.PageCount; i++)
+                    {
+                        <li class="page-item @(i == Model.Klanten.PageNumber ? "active" : "")">
+                            <a class="text-dark page-link" href="@Url.Action(actionName, new { isActive = ViewBag.IsActive, isNatuurlijke = ViewBag.IsNatuurlijke, page = i })">@i</a>
+                        </li>
+                    }
+
+                    <!-- Toon "Volgende" alleen als we niet op de laatste pagina zijn -->
+                    <li class="page-item @(!Model.Klanten.HasNextPage ? "disabled" : "")">
+                        <a class="page-link btn btn-primary"
+                           href="@Url.Action(actionName, new { isActive = ViewBag.IsActive, isNatuurlijke = ViewBag.IsNatuurlijke, page = Model.Klanten.PageNumber + 1 })"
+                            @(!Model.Klanten.HasNextPage ? "aria-disabled='true'" : "")>
+                            Volgende
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        }
+        else
+        {
+            <div class="alert alert-warning" role="alert">
+                <h4 class="alert-heading">Geen klanten gevonden</h4>
+                <p>De opgegeven klanten kon niet worden geladen. Controleer of de klanten bestaat en probeer opnieuw.</p>
+            </div>
+        }
+    </div>
+</div>
+<script>
+   function saveCustomerUrl() {
+    sessionStorage.setItem('previousCustomerUrl', window.location.href);
+}
+</script>

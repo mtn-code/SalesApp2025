@@ -1,0 +1,157 @@
+﻿@model Verkoop2025Web.Models.OrderDetailViewModel
+
+@{
+	ViewData["Title"] = "Bestelling details";
+}
+@if (Model != null && Model.Bestellijnen != null)
+{
+	<button class="btn btn-primary terug-button" onclick="goBack();">
+	<i class="fa-solid fa-arrow-left"></i>
+	Terug
+</button>
+
+	<h1 class="title text-black">@ViewData["Title"]</h1>
+
+	<div class="d-flex justify-content-evenly align-items-center mb-3">
+	<span><strong>Besteldatum:</strong> @Model.BestelDatum.ToString("dd-MM-yyyy")</span>
+	<span><strong>Status:</strong> @Model.BestellingStatus</span>
+	@if (Model.BestellingStatus == "Lopend" || Model.BestellingStatus == "Betaald")
+		{
+			<a asp-action="ChangeOrderStatus" asp-route-orderId="@Model.BestelId" class="btn btn-danger">Annuleren</a>
+		}
+	</div>
+
+	<div class="d-flex flex-wrap gap-3">
+	<div class="info-box">
+		<p class="text-center"><strong> Klantinfo</strong></p>
+
+		@if (Model.KlantVoornaam != null)
+			{
+				<p><strong>Naam:</strong> @Model.KlantVoornaam @Model.KlantFamilienaam</p>
+				<p><strong>Email:</strong> @Model.KlantEmail </p>
+			}
+			else
+			{
+				<p><strong>Naam:</strong> @Model.RechtspersoonNaam </p>
+				<p><strong>BTWNr:</strong> @Model.RechtspersoonBTWNr </p>
+			}
+		</div>
+		<div class="info-box">
+			@if (Model.Betaalwijze != null && Model.ActiecodeGebruikt != null)
+			{
+				<p class="text-center"><strong>Betalingsinfo</strong></p>
+				<p><strong>Betaalwijze: </strong>@Model.Betaalwijze?.Naam</p>
+				<p><strong>Betalingscode: </strong>@Model.Betalingscode</p>
+				<p><strong>Actiecode Gebruikt? </strong>@((bool)Model.ActiecodeGebruikt ? "Ja" : "Nee")</p>
+			}
+			else
+			{
+				<span>Contactpersoon niet beschikbaar</span>
+			}
+		</div>
+		<div class="info-box">
+			<p class="text-center"><strong>Facturatieadres</strong></p>
+			@if (Model.Facturatieadres != null)
+			{
+				<p>
+					@Model.Facturatieadres?.Straat
+					@Model.Facturatieadres?.HuisNummer
+					@(!string.IsNullOrEmpty(Model.Facturatieadres?.Bus) ? $"/{Model.Facturatieadres.Bus}" : "")
+				</p>
+
+				<p>@($"{Model.Facturatieadres?.Plaats?.Postcode} {Model.Facturatieadres?.Plaats?.Naam}")</p>
+
+			}
+			else
+			{
+				<span>Adres niet beschikbaar</span>
+			}
+
+		</div>
+		<div class="info-box">
+			<p class="text-center"><strong>Leveringsadres</strong></p>
+			@if (Model.Leveradres != null)
+			{
+				<p>
+					@Model.Leveradres?.Straat
+					@Model.Leveradres?.HuisNummer
+					@(!string.IsNullOrEmpty(Model.Leveradres?.Bus) ? $"/{Model.Leveradres.Bus}" : "")
+				</p>
+
+				<p>@($"{Model.Leveradres?.Plaats?.Postcode} {Model.Leveradres?.Plaats?.Naam}")</p>
+
+			}
+			else
+			{
+				<span>Adres niet beschikbaar</span>
+			}
+
+		</div>
+	</div>
+
+
+	<h4 class="mt-4 text-center"><strong>Bestelde artikelen</strong></h4>
+
+	<div class="table-responsive">
+	<table class="table table-hover">
+		<thead>
+			<tr>
+
+				<th scope="col">Naam</th>
+				<th scope="col">Aantal</th>
+				<th scope="col">Prijs per stuk</th>
+			</tr>
+		</thead>
+		<tbody>
+			@foreach (var item in Model.Bestellijnen)
+				{
+					<tr>
+						<th scope="row">@item.Artikel.Naam</th>
+						<td>
+							@if (Model.BestellingStatus == "Lopend" || Model.BestellingStatus == "Betaald")
+							{
+								<form asp-action="UpdateOrderLineQuantity" asp-route-orderId="@Model.BestelId"
+									asp-route-orderLineId="@item.BestellijnId" method="post"
+									class="d-flex align-items-center justify-content-center">
+									<input type="number" name="newQuantity" value="@item.AantalBesteld"
+										class="form-control text-center me-2" style="width: 70px;" min="0">
+									<button type="submit" class="btn btn-primary">
+										<img src="~/images/icons8-checkmark-24.png" alt="Update" />
+									</button>
+								</form>
+							}
+							else
+							{
+								@item.AantalBesteld
+							}
+						</td>
+
+						<td>€ @item.Artikel.Prijs.ToString("0.00") </td>
+					</tr>
+
+				}
+
+			</tbody>
+		</table>
+	</div>
+}
+else
+{
+	<div class="alert alert-warning" role="alert">
+	<h4 class="alert-heading">Geen bestelling gevonden</h4>
+	<p>De opgegeven bestelling kon niet worden geladen. Controleer of de bestelling bestaat en probeer opnieuw.</p>
+</div>
+}
+
+
+<script>
+	function goBack() {
+		var previousUrl = sessionStorage.getItem('previousOrderUrl');
+		var previousPageUrl = sessionStorage.getItem('previousOrderPageUrl');
+		if (previousUrl != null && previousUrl !== 'null') {
+			window.location.href = previousUrl;
+		} else if (previousPageUrl != null && previousPageUrl !== 'null') {
+			window.location.href = previousPageUrl;
+		}
+	}
+</script>

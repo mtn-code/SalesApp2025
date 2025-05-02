@@ -1,0 +1,71 @@
+﻿@using Verkoop2025Web.Models
+@model AdressViewModel
+@{
+    ViewData["Title"] = "Wijzig facturatieadres";
+}
+
+<button class="btn btn-primary terug-button" onclick="window.history.back();">
+    <i class="fa-solid fa-arrow-left"></i>
+    Terug
+</button>
+
+<h1 class="title text-black">@ViewData["Title"]</h1>
+<div class="p-3 mb-4 border rounded bg-white shadow-sm">
+    <h5 class="fw-bold"><i class="bi bi-house-door-fill text-primary"></i> Huidig facturatieadres</h5>
+    <p class="mb-1">
+        <strong>Straat:</strong> @ViewBag.CurrentBillingAdress?.Straat
+        @ViewBag.CurrentBillingAdress?.HuisNummer
+        @(!string.IsNullOrEmpty(ViewBag.CurrentBillingAdress?.Bus) ? $"/{ViewBag.CurrentBillingAdress?.Bus}" : "")
+    </p>
+    <p class="mb-0"><strong>Postcode & Plaats:</strong> @($"{ViewBag.CurrentBillingAdress?.Plaats?.Postcode} {ViewBag.CurrentBillingAdress?.Plaats?.Naam}")</p>
+</div>
+
+
+<form asp-action="UpdateBillingAdress" method="post" class="p-4 border rounded bg-light">
+    <input type="hidden" asp-for="KlantId" />
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <label asp-for="@Model.Straat" class="fw-bold">Straat</label>
+            <input type="text" asp-for="@Model.Straat" placeholder="Main street" class="form-control">
+            <span asp-validation-for="@Model.Straat" class="text-danger"></span>
+        </div>
+        <div class="col-md-3">
+            <label asp-for="@Model.Huisnummer" class="fw-bold">Huisnummer</label>
+            <input type="text" asp-for="@Model.Huisnummer" placeholder="123" class="form-control">
+            <span asp-validation-for="@Model.Huisnummer" class="text-danger"></span>
+        </div>
+        <div class="col-md-3">
+            <label asp-for="@Model.Bus" class="fw-bold">Bus</label>
+            <input type="text" asp-for="@Model.Bus" placeholder="A" class="form-control">
+            <span asp-validation-for="@Model.Bus" class="text-danger"></span>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <label asp-for="@Model.Postcode" class="fw-bold">Postcode</label>
+            <select asp-for="@Model.Postcode" asp-items="@Model.PostcodeSelectList" class="form-control">
+                <option value="">-- Select a postcode --</option>
+            </select>
+            <span asp-validation-for="@Model.Postcode" class="text-danger"></span>
+        </div>
+        <div class="col-md-8">
+            <label asp-for="@Model.Plaats" class="fw-bold">Plaats</label>
+            <select asp-for="@Model.Plaats" asp-items="@Model.PlaatsSelectList" class="form-control">
+                <option value="">-- Select a place --</option>
+            </select>
+            <span asp-validation-for="@Model.Plaats" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="text-start">
+        @if (!string.IsNullOrEmpty(ViewBag.ErrorMessage))
+        {
+            <div class="alert alert-danger d-flex align-items-center mt-3 p-2 px-3 rounded shadow-sm" role="alert">
+                <i class="bi bi-exclamation-circle-fill me-2"></i> @ViewBag.ErrorMessage
+            </div>
+        }
+    </div>
+    <div class="text-end">
+        <input type="submit" value="Wijzigen" class="btn btn-primary mt-3 px-4">
+    </div>
+</form>

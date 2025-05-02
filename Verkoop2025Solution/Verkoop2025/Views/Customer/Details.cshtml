@@ -1,0 +1,203 @@
+﻿@using Verkoop2025Web.Models
+@model CustomerDetailViewModel
+@{
+	ViewData["Title"] = "Klant details";
+}
+
+@if (Model != null)
+{
+	<button class="btn btn-primary terug-button" onclick="goBack();">
+	<i class="fa-solid fa-arrow-left"></i>
+	Terug
+</button>
+
+	<h1 class="title text-black">@ViewData["Title"]</h1>
+
+
+	<div class="d-flex flex-wrap gap-3">
+	@* Box Contactpersonen *@
+	<div class="info-box">
+		<p class="text-center"><strong> Klantinfo</strong></p>
+		@if (Model.KlantVoornaam != null && Model.Klant?.NatuurlijkePersoon?.GebruikersAccount != null)
+			{
+				<div class="row">
+					<div class="col-9">
+						<p><strong>Naam:</strong> @Model.KlantVoornaam @Model.KlantFamilienaam</p>
+						<p><strong>Email:</strong> @Model.KlantEmail </p>
+						<p>Natuurlijk Persoon</p>
+					</div>
+					<form asp-action="ToggleCustomerStatus"
+						asp-route-id="@Model.Klant.NatuurlijkePersoon.GebruikersAccount.GebruikersAccountId" method="post"
+						class="col-3">
+						@if (Model.Klant.NatuurlijkePersoon.GebruikersAccount.Disabled == true)
+						{
+							<button type="submit" class="btn btn-success">Activeer</button>
+						}
+						else
+						{
+							<button type="submit" class="btn btn-danger">Deactiveer</button>
+						}
+					</form>
+				</div>
+			}
+
+			else
+			{
+				<p><strong>Naam:</strong> @Model.RechtspersoonNaam </p>
+				<p><strong>BTWNr:</strong> @Model.RechtspersoonBTWNr </p>
+				<p>Rechtspersoon</p>
+			}
+		</div>
+		@* Box Contactpersonen *@
+		<div class="info-box">
+			<p class="text-center"><strong> Contactpersonen</strong></p>
+			@if (Model.Contactpersonen != null && Model.Contactpersonen.Count() != 0)
+			{
+				<table class="contactpersonen">
+					<thead>
+						<tr>
+							<th scope="col">Voornaam</th>
+							<th scope="col">Familienaam</th>
+							<th scope="col">Functie</th>
+						</tr>
+					</thead>
+					<tbody>
+						@foreach (var item in Model.Contactpersonen)
+						{
+							<tr>
+								<th scope="row">@item.Voornaam</th>
+								<td>@item.Familienaam</td>
+								<td>@item.Functie </td>
+							</tr>
+						}
+
+					</tbody>
+				</table>
+			}
+			else
+			{
+				<div class="alert alert-info m-4" role="alert">
+					<p>Deze klant heeft geen contactpersonen.</p>
+				</div>
+			}
+		</div>
+		@* Box Facturatieadres *@
+		<div class="info-box">
+			<p class="text-center"><strong>Facturatieadres</strong></p>
+
+			@if (Model.Facturatieadres != null)
+			{
+				<div class="row">
+					<div class="col-9">
+						<p class="mb-0">
+							@Model.Facturatieadres?.Straat
+							@Model.Facturatieadres?.HuisNummer
+							@(!string.IsNullOrEmpty(Model.Facturatieadres?.Bus) ? $"/{Model.Facturatieadres.Bus}" : "")
+						</p>
+						<p class="mb-0">@($"{Model.Facturatieadres?.Plaats?.Postcode} {Model.Facturatieadres?.Plaats?.Naam}")
+						</p>
+					</div>
+					<div class="col-3"> <a asp-controller="Customer" asp-action="ChangeBillingAdress"
+							asp-route-id="@Model.KlantId" class="btn btn-primary" type="button">
+							Wijzigen
+						</a>
+					</div>
+				</div>
+			}
+			else
+			{
+				<div class="d-flex justify-content-between align-items-center">
+					<span>Adres niet beschikbaar</span>
+				</div>
+			}
+		</div>
+		<div class="info-box">
+			<p class="text-center"><strong>Leveringsadres</strong></p>
+			@if (Model.Leveradres != null)
+			{
+				<div class="row">
+					<div class="col-9">
+						<p>
+							@Model.Leveradres?.Straat
+							@Model.Leveradres?.HuisNummer
+							@(!string.IsNullOrEmpty(Model.Leveradres?.Bus) ? $"/{Model.Leveradres.Bus}" : "")
+						</p>
+
+						<p>@($"{Model.Leveradres?.Plaats?.Postcode} {Model.Leveradres?.Plaats?.Naam}")</p>
+					</div>
+					<div class="col-3">
+						<a asp-controller="Customer" asp-action="ChangeDeliveryAddress" asp-route-id="@Model.KlantId"
+							class="btn btn-primary " type="button">
+							Wijzigen
+						</a>
+					</div>
+				</div>
+			}
+			else
+			{
+				<span>Adres niet beschikbaar</span>
+			}
+		</div>
+	</div>
+	@if (Model.Bestellingen!.Any())
+	{
+		<h4 class="mt-4 text-center"><strong>Bestellingen</strong></h4>
+		<table class="table">
+	<thead>
+		<tr>
+			<th scope="col">Bestelnummer</th>
+			<th scope="col">Besteldatum</th>
+			<th scope="col">Bestelstatus</th>
+			<th scope="col">Aantal artikels van de bestelling</th>
+			<th scope="col"></th>
+		</tr>
+	</thead>
+	<tbody>
+		@foreach (var order in Model.Bestellingen!)
+				{
+					<tr>
+						<th scope="row">@order.BestelId</th>
+						<td>@order.Besteldatum.ToString("dd/MM/yyyy")</td>
+						<td>@order.BestellingsStatus.Naam</td>
+						<td>@order.Bestellijnen?.Sum(bl => bl.AantalBesteld)</td>
+						<td class="d-flex justify-content-end align-content-center">
+							<a asp-controller="Order" asp-action="Details" asp-route-id="@order.BestelId" class="btn btn-primary"
+								onclick="saveOrderUrl();">
+								Detail
+							</a>
+						</td>
+					</tr>
+				}
+			</tbody>
+		</table>
+	}
+	else
+	{
+		<h4 class="mt-4 text-center"><strong>Bestellingen</strong></h4>
+		<div class="alert alert-info" role="alert">
+	<p>Deze klant heeft geen bestellingen.</p>
+</div>
+	}
+
+}
+else
+{
+	<div class="alert alert-warning" role="alert">
+	<h4 class="alert-heading">Klant niet gevonden</h4>
+	<p>De opgegeven klanten details kunnen niet geladen worden. Controleer of de klant bestaat en probeer opnieuw.</p>
+</div>
+}
+<script>
+	function goBack() {
+		const previousUrl = sessionStorage.getItem('previousCustomerUrl');
+		if (previousUrl) {
+			window.location.href = previousUrl;
+		} else {
+			window.location.href = '@Url.Action("Index", "Customer")';
+		}
+	}
+	function saveOrderUrl() {
+		sessionStorage.removeItem('previousOrderPageUrl', window.location.href);
+		sessionStorage.setItem('previousOrderUrl', window.location.href);
+	}
+</script>
